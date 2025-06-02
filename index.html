@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Calculadora</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; }
+        .calculator { max-width: 300px; }
+        .result { margin-top: 1em; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <h1>Calculadora de suma</h1>
+        <label>
+            Número 1:
+            <input type="number" id="num1" />
+        </label>
+        <br/>
+        <label>
+            Número 2:
+            <input type="number" id="num2" />
+        </label>
+        <br/>
+        <button id="sumar">Sumar</button>
+        <div class="result" id="resultado"></div>
+    </div>
+
+    <script>
+        document.getElementById('sumar').addEventListener('click', function() {
+            const num1 = parseFloat(document.getElementById('num1').value) || 0;
+            const num2 = parseFloat(document.getElementById('num2').value) || 0;
+            const resultado = num1 + num2;
+            document.getElementById('resultado').innerText = 'Resultado: ' + resultado;
+        });
+    </script>
+</body>
+</html>
