@@ -2,37 +2,193 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Calculadora</title>
+    <title>Calculadora Completa</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 2em; }
-        .calculator { max-width: 300px; }
-        .result { margin-top: 1em; font-weight: bold; }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; display: flex; justify-content: center; padding-top: 40px; }
+        .calculator { background: #fff; border: 1px solid #ccc; padding: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        #display { width: 100%; height: 40px; font-size: 1.5em; text-align: right; padding: 0 10px; margin-bottom: 8px; }
+        .memory-buttons, .buttons { display: grid; grid-gap: 4px; }
+        .memory-buttons { grid-template-columns: repeat(5, 1fr); margin-bottom: 4px; }
+        .buttons { grid-template-columns: repeat(4, 1fr); }
+        button { height: 40px; font-size: 1em; }
+        .equal { background: #4CAF50; color: white; }
     </style>
 </head>
 <body>
     <div class="calculator">
-        <h1>Calculadora de suma</h1>
-        <label>
-            Número 1:
-            <input type="number" id="num1" />
-        </label>
-        <br/>
-        <label>
-            Número 2:
-            <input type="number" id="num2" />
-        </label>
-        <br/>
-        <button id="sumar">Sumar</button>
-        <div class="result" id="resultado"></div>
+        <input type="text" id="display" value="0" readonly>
+        <div class="memory-buttons">
+            <button id="mc">MC</button>
+            <button id="mr">MR</button>
+            <button id="mplus">M+</button>
+            <button id="mminus">M-</button>
+            <button id="ms">MS</button>
+        </div>
+        <div class="buttons">
+            <button id="ce">CE</button>
+            <button id="c">C</button>
+            <button id="del">&larr;</button>
+            <button data-op="/">/</button>
+
+            <button id="sqrt">√</button>
+            <button id="percent">%</button>
+            <button id="reciproc">1/x</button>
+            <button data-op="*">*</button>
+
+            <button data-num="7">7</button>
+            <button data-num="8">8</button>
+            <button data-num="9">9</button>
+            <button data-op="-">-</button>
+
+            <button data-num="4">4</button>
+            <button data-num="5">5</button>
+            <button data-num="6">6</button>
+            <button data-op="+">+</button>
+
+            <button data-num="1">1</button>
+            <button data-num="2">2</button>
+            <button data-num="3">3</button>
+            <button id="equal" class="equal">=</button>
+
+            <button id="plus-minus">±</button>
+            <button data-num="0">0</button>
+            <button id="dot">.</button>
+        </div>
     </div>
 
     <script>
-        document.getElementById('sumar').addEventListener('click', function() {
-            const num1 = parseFloat(document.getElementById('num1').value) || 0;
-            const num2 = parseFloat(document.getElementById('num2').value) || 0;
-            const resultado = num1 + num2;
-            document.getElementById('resultado').innerText = 'Resultado: ' + resultado;
-        });
+        const display = document.getElementById('display');
+        let currentValue = '0';
+        let firstValue = null;
+        let operator = null;
+        let waitingForSecond = false;
+        let memory = 0;
+
+        function updateDisplay() {
+            display.value = currentValue;
+        }
+
+        function inputDigit(d) {
+            if (waitingForSecond) {
+                currentValue = d;
+                waitingForSecond = false;
+            } else {
+                currentValue = currentValue === '0' ? d : currentValue + d;
+            }
+            updateDisplay();
+        }
+
+        function inputDot() {
+            if (waitingForSecond) {
+                currentValue = '0.';
+                waitingForSecond = false;
+            } else if (!currentValue.includes('.')) {
+                currentValue += '.';
+            }
+            updateDisplay();
+        }
+
+        function clearAll() {
+            currentValue = '0';
+            firstValue = null;
+            operator = null;
+            waitingForSecond = false;
+            updateDisplay();
+        }
+
+        function clearEntry() {
+            currentValue = '0';
+            updateDisplay();
+        }
+
+        function backspace() {
+            if (waitingForSecond) return;
+            currentValue = currentValue.slice(0, -1) || '0';
+            updateDisplay();
+        }
+
+        function handleOperator(nextOp) {
+            const value = parseFloat(currentValue);
+            if (operator && waitingForSecond) {
+                operator = nextOp;
+                return;
+            }
+            if (firstValue === null) {
+                firstValue = value;
+            } else if (operator) {
+                const result = calculate(firstValue, value, operator);
+                currentValue = String(result);
+                firstValue = result;
+            }
+            waitingForSecond = true;
+            operator = nextOp;
+            updateDisplay();
+        }
+
+        function calculate(a, b, op) {
+            switch (op) {
+                case '+': return a + b;
+                case '-': return a - b;
+                case '*': return a * b;
+                case '/': return b === 0 ? 'Error' : a / b;
+                default: return b;
+            }
+        }
+
+        function handleEquals() {
+            if (operator === null || waitingForSecond) return;
+            const value = parseFloat(currentValue);
+            const result = calculate(firstValue, value, operator);
+            currentValue = String(result);
+            firstValue = null;
+            operator = null;
+            waitingForSecond = false;
+            updateDisplay();
+        }
+
+        function plusMinus() {
+            if (currentValue === '0') return;
+            currentValue = currentValue.startsWith('-') ? currentValue.slice(1) : '-' + currentValue;
+            updateDisplay();
+        }
+
+        function percent() {
+            currentValue = String(parseFloat(currentValue) / 100);
+            updateDisplay();
+        }
+
+        function sqrt() {
+            currentValue = String(Math.sqrt(parseFloat(currentValue)));
+            updateDisplay();
+        }
+
+        function reciprocal() {
+            currentValue = String(1 / parseFloat(currentValue));
+            updateDisplay();
+        }
+
+        function memoryClear() { memory = 0; }
+        function memoryRecall() { currentValue = String(memory); updateDisplay(); }
+        function memoryAdd() { memory += parseFloat(currentValue); }
+        function memorySubtract() { memory -= parseFloat(currentValue); }
+        function memoryStore() { memory = parseFloat(currentValue); }
+
+        document.querySelectorAll('[data-num]').forEach(b => b.addEventListener('click', () => inputDigit(b.dataset.num)));
+        document.querySelectorAll('[data-op]').forEach(b => b.addEventListener('click', () => handleOperator(b.dataset.op)));
+        document.getElementById('dot').addEventListener('click', inputDot);
+        document.getElementById('equal').addEventListener('click', handleEquals);
+        document.getElementById('c').addEventListener('click', clearAll);
+        document.getElementById('ce').addEventListener('click', clearEntry);
+        document.getElementById('del').addEventListener('click', backspace);
+        document.getElementById('plus-minus').addEventListener('click', plusMinus);
+        document.getElementById('percent').addEventListener('click', percent);
+        document.getElementById('sqrt').addEventListener('click', sqrt);
+        document.getElementById('reciproc').addEventListener('click', reciprocal);
+        document.getElementById('mc').addEventListener('click', memoryClear);
+        document.getElementById('mr').addEventListener('click', memoryRecall);
+        document.getElementById('mplus').addEventListener('click', memoryAdd);
+        document.getElementById('mminus').addEventListener('click', memorySubtract);
+        document.getElementById('ms').addEventListener('click', memoryStore);
     </script>
 </body>
 </html>
